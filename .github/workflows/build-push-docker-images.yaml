@@ -1,0 +1,28 @@
+name: Build and Push Dockerfiles
+
+on:
+  push:
+    branches:
+      - main  # or your default branch
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push all Dockerfiles
+        run: |
+          for file in Dockerfile.*; do
+            suffix="${file#Dockerfile.}"
+            image="tehilathestudent/${suffix}"
+            docker build -f "$file" -t "$image:latest" .
+            docker push "$image:latest"
+          done
