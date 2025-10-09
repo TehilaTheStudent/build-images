@@ -3,7 +3,7 @@ name: Build and Push Dockerfiles
 on:
   push:
     branches:
-      - main  # or your default branch
+      - "*"  # or your default branch
 
 jobs:
   build-and-push:
