@@ -1,1 +1,48 @@
 
+# Minimal image with kubectl, helm, curl and bash so you can run kubectl/helm commands interactively.
+# Builds on Ubuntu for compatibility with official binaries. Adjust ARGs to choose versions.
+ARG KUBECTL_VERSION=stable
+ARG HELM_VERSION=v3.12.0
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+LABEL maintainer="TehilaTheStudent <noreply>"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      bash \
+      gnupg \
+      tar \
+      unzip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install kubectl (uses KUBECTL_VERSION arg; "stable" resolves to the current stable release)
+RUN set -eux; \
+    if [ "$KUBECTL_VERSION" = "stable" ]; then \
+      KVER="$(curl -L -s https://dl.k8s.io/release/stable.txt)"; \
+    else \
+      KVER="$KUBECTL_VERSION"; \
+    fi; \
+    curl -fsSL "https://dl.k8s.io/release/${KVER}/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl; \
+    chmod +x /usr/local/bin/kubectl; \
+    /usr/local/bin/kubectl version --client=true || true
+
+# Install helm (uses HELM_VERSION arg)
+RUN set -eux; \
+    curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" -o /tmp/helm.tar.gz; \
+    tar -zxvf /tmp/helm.tar.gz -C /tmp; \
+    mv /tmp/linux-amd64/helm /usr/local/bin/helm; \
+    chmod +x /usr/local/bin/helm; \
+    rm -rf /tmp/helm.tar.gz /tmp/linux-amd64; \
+    helm version --client || true
+
+# Optional: add a non-root user (uncomment if you want)
+# RUN useradd -ms /bin/bash dev && usermod -aG sudo dev
+# USER dev
+WORKDIR /root
+
+# Keep bash as entrypoint so you land into shell immediately when running the container
+ENTRYPOINT ["/bin/bash"]
+CMD ["-l"]
