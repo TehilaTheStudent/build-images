@@ -9,9 +9,11 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     # expose swr_user and swr_pass as envs (set these as repository secrets: SWR_USER, SWR_PASS)
+    # swr_org is read from repository variables (not a secret) - set this in Settings → Variables → Repository variables
     env:
       swr_user: ${{ secrets.SWR_USER }}
       swr_pass: ${{ secrets.SWR_PASS }}
+      swr_org: ${{ vars.SWR_ORG }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,7 +38,7 @@ jobs:
           for file in Dockerfile.*; do
             suffix="${file#Dockerfile.}"
             hub_image="tehilathestudent/${suffix}:latest"
-            swr_image="swr.ap-southeast-3.myhuaweicloud.com/tehilathestudent/${suffix}:latest"
+            swr_image="swr.ap-southeast-3.myhuaweicloud.com/${swr_org}/${suffix}:latest"
 
             echo "Building $file -> $hub_image and $swr_image"
             docker build -f "$file" -t "$hub_image" -t "$swr_image" .
