@@ -6,4 +6,4 @@ RUN apk add --no-cache bash git curl
 # Set bash as the default shell
 ENV SHELL=/bin/bash
 ENTRYPOINT ["/bin/bash", "-c"]
-CMD ["/bin/bash"]
+CMD ["tail", "-f", "/dev/null"]
