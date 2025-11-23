@@ -1,0 +1,22 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    iproute2 \
+    iputils-ping \
+    curl \
+    git \
+    dnsutils \
+    net-tools \
+    traceroute \
+    tcpdump \
+    vim \
+    less \
+    procps \
+    python3 \
+    python3-pip \
+    telnet \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+CMD ["bash"]
