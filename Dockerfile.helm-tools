@@ -1,0 +1,8 @@
+FROM lachlanevenson/k8s-helm:latest
+
+# Install bash
+RUN apk add --no-cache bash
+
+# Set bash as the default shell
+ENV SHELL /bin/bash
+ENTRYPOINT ["/bin/bash", "-c"]
