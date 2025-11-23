@@ -8,6 +8,10 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    # expose swr_user and swr_pass as envs (set these as repository secrets: SWR_USER, SWR_PASS)
+    env:
+      swr_user: ${{ secrets.SWR_USER }}
+      swr_pass: ${{ secrets.SWR_PASS }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,11 +22,28 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push all Dockerfiles
+      - name: Log in to Huawei SWR
+        uses: docker/login-action@v3
+        with:
+          registry: swr.ap-southeast-3.myhuaweicloud.com
+          username: ${{ env.swr_user }}
+          password: ${{ env.swr_pass }}
+
+      - name: Build and push all Dockerfiles to Docker Hub and SWR
         run: |
+          # enable nullglob so the loop will skip if there are no matching files
+          shopt -s nullglob
           for file in Dockerfile.*; do
             suffix="${file#Dockerfile.}"
-            image="tehilathestudent/${suffix}"
-            docker build -f "$file" -t "$image:latest" .
-            docker push "$image:latest"
+            hub_image="tehilathestudent/${suffix}:latest"
+            swr_image="swr.ap-southeast-3.myhuaweicloud.com/tehilathestudent/${suffix}:latest"
+
+            echo "Building $file -> $hub_image and $swr_image"
+            docker build -f "$file" -t "$hub_image" -t "$swr_image" .
+
+            echo "Pushing $hub_image"
+            docker push "$hub_image"
+
+            echo "Pushing $swr_image"
+            docker push "$swr_image"
           done
